@@ -1,40 +1,27 @@
 import {Route, Routes} from 'react-router-dom'
-import { useState, createContext } from 'react';
-import * as Realm from 'realm-web';
 import './App.css';
 
 import {CenterChildUsingFlex, MainWrapper} from './style/main_screen'
 import LoginPage from './pages/login';
 import HomePage from './pages/homepage';
 import EntryPage from './pages/entry'
+import { ConnectionProvider } from './utils/ConnectionContext';
+import ReportPage from './pages/report';
 
-export const UserContext = createContext()
-
+// TODO: check if user is in. if not-> throw bback to entrypage
 function App() {
-  const [userData, setUserData] = useState({uid:"567"});
-
-  const loginUser = async (user_id) => {
-      try {
-        const app = new Realm.App({ id: "picky-mon-gtvea" });
-        const credentials = Realm.Credentials.anonymous();  
-        const user = await app.logIn(credentials);
-        setUserData({uid: user_id, uinstance: user})
-      } catch(err) {
-        console.error("Failed to log in", err);
-      }
-  }
-
 
   return (
-    <UserContext.Provider value={userData}>
+    <ConnectionProvider>
       <CenterChildUsingFlex><MainWrapper>
         <Routes>
-          <Route path="/" element={<EntryPage/>} />
+          <Route path="/" element={<EntryPage />} />
           <Route path="/home" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage LoginFunc={loginUser}/>} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/report" element={<ReportPage />} />
         </Routes>
       </MainWrapper></CenterChildUsingFlex>
-    </UserContext.Provider>
+    </ConnectionProvider>
   );
 }
 
