@@ -1,5 +1,5 @@
-export const VIEW_WIDTH = 270;
-export const VIEW_HEIGHT = 480;
+export const VIEW_WIDTH = 293;
+export const VIEW_HEIGHT = 520;
 
 export const USER_ACTIONS = {
     LOGIN : "login",

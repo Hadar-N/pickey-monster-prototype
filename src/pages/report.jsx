@@ -1,17 +1,18 @@
 import React, { useState } from "react"
-// import { useNavigate } from 'react-router-dom';
-import { InputField, FormTitle, SubmitButton, FlexFormContainer, FormGrid, FormText } from "../style/form_elements"
+import { useNavigate } from 'react-router-dom';
+import { MenuItem } from "@mui/material";
+import { InputField, FormTitle, SubmitButton, FlexFormContainer, FormGrid, FormText, SelectField } from "../style/form_elements"
 import { useConnection, useUserActions } from "../utils/ConnectionContext";
 import { USER_ACTIONS } from "../utils/consts"
 
 export default function ReportPage() {
-    const [formContent, setFormContent] = useState({total_sugar:"", name: ""})
+    const [formContent, setFormContent] = useState({weight: "", measurement: "", total_sugar:"", name: ""})
     const userActions = useUserActions();
     const user = useConnection();
     
     const setRelevantInfo = (e) => {
         const contentChange = {};
-        contentChange[e.target.getAttribute("field-name")] = e.target.value;
+        contentChange[e.target.name] = e.target.value;
         setFormContent({...formContent, ...contentChange})
     }
 
@@ -33,12 +34,28 @@ export default function ReportPage() {
 
         <FormGrid isOneline="True">
             <div>
+                <FormText>Weight</FormText>
+                <InputField name="weight" onChange={setRelevantInfo}/>
+            </div>
+            <div>
+                <FormText>Unit</FormText>
+                <SelectField
+                    name="measurement"
+                    value={formContent.measurement}
+                    onChange={setRelevantInfo}
+                    style={{color: 'white'}}
+                >
+                    <MenuItem value={"gr"}>gr</MenuItem>
+                    <MenuItem value={"ml"}>ml</MenuItem>
+                </SelectField>
+            </div>
+            <div>
                 <FormText>Snack Name</FormText>
-                <InputField field-name="name" onChange={setRelevantInfo}/>
+                <InputField name="name" onChange={setRelevantInfo}/>
             </div>
             <div>
                 <FormText>Sugar (gr)</FormText>
-                <InputField field-name="total_sugar" onChange={setRelevantInfo}/>
+                <InputField name="total_sugar" onChange={setRelevantInfo}/>
             </div>
         </FormGrid>
 

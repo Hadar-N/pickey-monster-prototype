@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react"
 import { useNavigate } from 'react-router-dom';
-import { InputField, FormTitle, SubmitButton, FlexFormContainer, FormGrid, FormText } from "../style/form_elements"
+import { InputField, FormTitle, SubmitButton, FlexFormContainer, FormGrid, FormText, SelectField } from "../style/form_elements"
 import { useConnection, useUserActions } from "../utils/ConnectionContext"
 import { USER_STATUSES, USER_ACTIONS } from "../utils/consts"
 import { calcTotalSugarInGram } from '../utils/general'
+import { MenuItem } from "@mui/material";
+import { testChecks } from '../utils/nutritionixApi'
 
 export default function LoginPage() {
     const [idInput, setIdInput] = useState("")
-    const [formContent, setFormContent] = useState({age:"", gender:"", weight:"", height:"", workouts: ""})
+    const [formContent, setFormContent] = useState({age:'', gender:'', weight:'', height:'', workouts: ''})
     const user = useConnection();
     const userActions = useUserActions();
     const navigate = useNavigate();
@@ -16,6 +18,7 @@ export default function LoginPage() {
         if([USER_STATUSES.TEST_USER, USER_STATUSES.MANAGER].includes(user.sid)) {
             // navigate('/home')
             navigate('/report')
+            testChecks();
         }
     }, [user.sid, navigate])
 
@@ -37,7 +40,7 @@ export default function LoginPage() {
 
     const setRelevantInfo = (e) => {
         const contentChange = {};
-        contentChange[e.target.getAttribute("field-name")] = e.target.value;
+        contentChange[e.target.name] = e.target.value;
         setFormContent({...formContent, ...contentChange})
     }
 
@@ -59,23 +62,32 @@ export default function LoginPage() {
             {user.sid === USER_STATUSES.INACTIVE &&<>
             <div>
                 <FormText>Age</FormText>
-                <InputField field-name="age" onChange={setRelevantInfo}/>
+                <InputField name="age" onChange={setRelevantInfo}/>
             </div>
             <div>
-                <FormText>Gender [M/F]</FormText>
-                <InputField field-name="gender" onChange={setRelevantInfo}/>
+                <FormText>Gender</FormText>
+                <SelectField
+                    name="gender"
+                    value={formContent.gender}
+                    onChange={setRelevantInfo}
+                    style={{color: 'white'}}
+                >
+                    <MenuItem value={"M"}>Male</MenuItem>
+                    <MenuItem value={"F"}>Female</MenuItem>
+                </SelectField>
+
             </div>
             <div>
                 <FormText>Weight (kg)</FormText>
-                <InputField field-name="weight" onChange={setRelevantInfo}/>
+                <InputField name="weight" onChange={setRelevantInfo}/>
             </div>
             <div>
                 <FormText>Height (cm)</FormText>
-                <InputField field-name="height" onChange={setRelevantInfo}/>
+                <InputField name="height" onChange={setRelevantInfo}/>
             </div>
             <div>
                 <FormText>Workouts (per week)</FormText>
-                <InputField field-name="workouts" onChange={setRelevantInfo}/>
+                <InputField name="workouts" onChange={setRelevantInfo}/>
             </div>
             </>
         }

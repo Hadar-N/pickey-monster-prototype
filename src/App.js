@@ -1,18 +1,26 @@
-import {Route, Routes} from 'react-router-dom'
+import {Route, Routes, useLocation, useNavigate} from 'react-router-dom'
 import './App.css';
 
 import {CenterChildUsingFlex, MainWrapper} from './style/main_screen'
 import LoginPage from './pages/login';
 import HomePage from './pages/homepage';
 import EntryPage from './pages/entry'
-import { ConnectionProvider } from './utils/ConnectionContext';
+import { useConnection } from './utils/ConnectionContext';
 import ReportPage from './pages/report';
+import { useEffect } from 'react';
 
-// TODO: check if user is in. if not-> throw bback to entrypage
 function App() {
+  const user = useConnection();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if(!user?.sid && !["/", "/login"].includes(location?.pathname)) {
+      navigate('/');
+    }
+  }, [user] )
 
   return (
-    <ConnectionProvider>
       <CenterChildUsingFlex><MainWrapper>
         <Routes>
           <Route path="/" element={<EntryPage />} />
@@ -21,7 +29,6 @@ function App() {
           <Route path="/report" element={<ReportPage />} />
         </Routes>
       </MainWrapper></CenterChildUsingFlex>
-    </ConnectionProvider>
   );
 }
 

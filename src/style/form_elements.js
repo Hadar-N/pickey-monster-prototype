@@ -1,5 +1,6 @@
 import styled from "styled-components";
-import { VIEW_HEIGHT, VIEW_WIDTH } from '../utils/consts';
+import { VIEW_WIDTH } from '../utils/consts';
+import { Select } from "@mui/material";
 
 export const FlexFormContainer = styled.form`
     position: relative;
@@ -30,7 +31,7 @@ export const FormGrid = styled.div.withConfig({
   })`
     display: grid;
     gap: 10px;
-    grid-template-columns: 100px 100px
+    grid-template-columns: 1fr 1fr
     // ${({isOneline}) => !isOneline &&`grid-template-columns: 100px 100px;`}
 `
 
@@ -56,14 +57,24 @@ export const InputField = styled.input`
     background-color: #FAC902;
     border: none;
     color: white;
-    width: 85px;
+    width: 90px;
     padding: 3px 7px;
 
     &:focus {
         outline: none;
     }
-    
 `
+
+export const SelectField = styled(Select)`
+    outline: none;
+    border: none;
+    height: 1.3em;
+    width: 105px;
+    background-color: #FAC902;
+
+    .MuiOutlinedInput-notchedOutline { border: 0 };
+`
+
 export const SubmitButton = styled.button.withConfig({
     shouldForwardProp: (prop) => 'centered' !== prop,
   })`
