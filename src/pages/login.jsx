@@ -5,7 +5,6 @@ import { useConnection, useUserActions } from "../utils/ConnectionContext"
 import { USER_STATUSES, USER_ACTIONS } from "../utils/consts"
 import { calcTotalSugarInGram } from '../utils/general'
 import { MenuItem } from "@mui/material";
-import { testChecks } from '../utils/nutritionixApi'
 
 export default function LoginPage() {
     const [idInput, setIdInput] = useState("")
@@ -16,9 +15,11 @@ export default function LoginPage() {
 
     useEffect(() => {
         if([USER_STATUSES.TEST_USER, USER_STATUSES.MANAGER].includes(user.sid)) {
-            // navigate('/home')
-            navigate('/report')
-            testChecks();
+            if(user.monsterImg) {
+                navigate('/home')
+            } else {
+                navigate('/choosemon')
+            }
         }
     }, [user.sid, navigate])
 
@@ -26,10 +27,10 @@ export default function LoginPage() {
         e.preventDefault();
 
         if (user.sid === USER_STATUSES.INACTIVE) {
-            const total_sugar = calcTotalSugarInGram(formContent)
-            console.log({total_sugar})
-            if(total_sugar) {
-                userActions(USER_ACTIONS.ACTIVATE_USER, {sugar_amount: total_sugar})
+            const totalSugar = calcTotalSugarInGram(formContent)
+            console.log({totalSugar})
+            if(totalSugar) {
+                userActions(USER_ACTIONS.ACTIVATE_USER, {sugarAmount: totalSugar})
             } else {
                 alert('error sugar calculation')
             }

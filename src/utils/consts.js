@@ -4,7 +4,9 @@ export const VIEW_HEIGHT = 520;
 export const USER_ACTIONS = {
     LOGIN : "login",
     ACTIVATE_USER : "activate_user",
-    REPORT_SNACK : "report_snack"
+    REPORT_SNACK : "report_snack",
+    GET_ALL_BASE_MONSTERS: "get_all_base_monsters",
+    CHOOSE_MONSTER: "choose_monster"
 }
 
 export const USER_STATUSES = {
@@ -32,4 +34,11 @@ export const VALIDATION_TYPES = {
     STRING : 'string',
     GREATER_THAN : 'greater_than',
     IN_OBJECT : 'in_object'
+}
+
+export const MONSTER_TYPES = {
+    YELLOW : "yellow",
+    PURPLE : "purple",
+    GREEN : "green",
+    BLUE : "blue",
 }

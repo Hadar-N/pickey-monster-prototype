@@ -23,10 +23,16 @@ export function ConnectionProvider ({children}) {
         await connectUser(params.uid)
         break;
       case USER_ACTIONS.ACTIVATE_USER:
-        await activateUser(params.sugar_amount)
+        await activateUser(params.sugarAmount)
         break;
       case USER_ACTIONS.REPORT_SNACK:
         await reportSnack(params.snackName, params.snackTotalSugar)
+        break;
+      case USER_ACTIONS.GET_ALL_BASE_MONSTERS:
+        return getBaseMonsters();
+      case USER_ACTIONS.CHOOSE_MONSTER:
+        console.log({params})
+        await chooseMonster(params.monsterType, params.monsterImg)
         break;
       default:
         alert(`actionType: ${actionType} not supported`)
@@ -35,9 +41,37 @@ export function ConnectionProvider ({children}) {
   }
 
   async function activateUser (sugarIntake) {
-    const res = await userInstance.functions.activate_user({uid: user.uid, sugar_amount: sugarIntake})
-    setUser({...user, sid:USER_STATUSES.TEST_USER, sugar_amount: sugarIntake})
-    console.log(res)
+    try{
+      const res = await userInstance.functions.activate_user({uid: user.uid, sugar_amount: sugarIntake})
+      setUser({...user, sid:USER_STATUSES.TEST_USER, sugar_amount: sugarIntake})
+      console.log(res)
+    } catch (err) {
+      console.log(err)
+      alert("error in connection, please retry logging in")
+    }
+  }
+
+  async function getBaseMonsters () {
+    try{
+      const res = await userInstance.functions.get_base_monsters();
+      console.log(res);
+      return res;
+    } catch (err) {
+      console.log(err)
+      alert("error in connection, please retry logging in")
+    }
+  }
+
+  async function chooseMonster (monsterType, monsterImg) {
+    try{
+      console.log(user.uid, monsterType, monsterImg)
+      const res = await userInstance.functions.attach_mon_to_user({uid: user.uid, mon_type: monsterType});
+      setUser({...user, monsterImg })
+      console.log(res, monsterType, monsterImg);
+    } catch (err) {
+      console.log(err)
+      alert("error in connection, please retry logging in")
+    }
   }
 
   async function reportSnack (snackName, snackTotalSugar) {
@@ -45,7 +79,8 @@ export function ConnectionProvider ({children}) {
       await userInstance.functions.add_report({uid: user.uid, snack_name: snackName, snack_total_sugar: snackTotalSugar})
       alert("Snack added successfully!")
     } catch (err) {
-      alert(err)
+      console.log(err)
+      alert("error in connection, please retry logging in")
     }
   }
 
@@ -62,24 +97,18 @@ export function ConnectionProvider ({children}) {
 
       //get and analyze user data
       const userData = await userConnect.functions.get_user_data({uid: Number(userId)})
-      switch (userData.length){
-        case 0:
-          alert('user not found')
-          break;
-        case 1:
-          setUser({
-            uid: userData[0].uid,
-            sid: userData[0].sid,
-            uname: userData[0].username,
-            sugar_amount: userData[0].sugar_amount,
-            monster_type: userData[0].monster_type
-  
-          })
-          break;
-          default:
-            alert('multiple users, please contact us')
-      }
-      
+      if(userData.uid && userData.username) {
+        setUser({
+          uid: userData.uid,
+          sid: userData.sid,
+          uname: userData.username,
+          sugarAmount: userData.sugar_amount,
+          monsterType: userData.mon_type,
+          monsterImg: userData.mon_link
+        })
+      } else {
+        alert('user not found')
+      }      
     } catch(err) {
       console.error("Failed to log in", err);
     }
