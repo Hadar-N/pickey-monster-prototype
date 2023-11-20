@@ -4,11 +4,8 @@ import PickyMonsterText from '../assets/PickyMonster.png'
 import PickyMonsterLogo from '../assets/OIG 1.png'
 import { LogoConteiner, SubmitButton, FlexFormContainer } from "../style/form_elements"
 import styled from "styled-components";
-import { useConnection } from "../utils/ConnectionContext";
 
 export default function EntryPage() {
-    const user = useConnection();
-    // TODO: check if already logged in!
     const navigate = useNavigate();
 
     const handleSubmit = event => {

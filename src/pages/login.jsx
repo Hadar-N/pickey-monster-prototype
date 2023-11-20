@@ -21,7 +21,7 @@ export default function LoginPage() {
                 navigate('/choosemon')
             }
         }
-    }, [user.sid, navigate])
+    }, [user.sid, navigate, user.monsterImg])
 
     const handleSubmit = async (e) => {
         e.preventDefault();

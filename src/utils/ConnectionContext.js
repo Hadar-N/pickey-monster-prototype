@@ -40,6 +40,12 @@ export function ConnectionProvider ({children}) {
 
   }
 
+  function getErrMessage(err) {
+    console.log({err, mes: err.message})
+    return (err.message).includes("Cannot read properties of undefined") ? "error in connection, please retry logging in" : err.error;
+    
+  }  
+
   async function activateUser (sugarIntake) {
     try{
       const res = await userInstance.functions.activate_user({uid: user.uid, sugar_amount: sugarIntake})
@@ -47,7 +53,7 @@ export function ConnectionProvider ({children}) {
       console.log(res)
     } catch (err) {
       console.log(err)
-      alert("error in connection, please retry logging in")
+      alert(getErrMessage(err))
     }
   }
 
@@ -58,7 +64,7 @@ export function ConnectionProvider ({children}) {
       return res;
     } catch (err) {
       console.log(err)
-      alert("error in connection, please retry logging in")
+      alert(getErrMessage(err))
     }
   }
 
@@ -70,17 +76,21 @@ export function ConnectionProvider ({children}) {
       console.log(res, monsterType, monsterImg);
     } catch (err) {
       console.log(err)
-      alert("error in connection, please retry logging in")
+      alert(getErrMessage(err))
     }
   }
 
   async function reportSnack (snackName, snackTotalSugar) {
     try{
       await userInstance.functions.add_report({uid: user.uid, snack_name: snackName, snack_total_sugar: snackTotalSugar})
+      const newReporsts = [...user.reports, {
+        uid: user.uid, snack_name: snackName, snack_total_sugar: snackTotalSugar, timestamp: new Date().getTime()
+    }]
+      setUser({...user, reports: newReporsts })
       alert("Snack added successfully!")
     } catch (err) {
       console.log(err)
-      alert("error in connection, please retry logging in")
+      alert(getErrMessage(err))
     }
   }
 
@@ -104,7 +114,8 @@ export function ConnectionProvider ({children}) {
           uname: userData.username,
           sugarAmount: userData.sugar_amount,
           monsterType: userData.mon_type,
-          monsterImg: userData.mon_link
+          monsterImg: userData.mon_link,
+          reports: userData.reports || []
         })
       } else {
         alert('user not found')

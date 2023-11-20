@@ -63,6 +63,11 @@ export const InputField = styled.input`
     &:focus {
         outline: none;
     }
+
+    &[type=number]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+    }
+
 `
 
 export const SelectField = styled(Select)`
@@ -71,26 +76,37 @@ export const SelectField = styled(Select)`
     height: 1.3em;
     width: 105px;
     background-color: #FAC902;
+    margin-top: 3px;
+    border-radius: 0;
 
-    .MuiOutlinedInput-notchedOutline { border: 0 };
+    .MuiOutlinedInput-notchedOutline { 
+        border: 0;
+        border-radius: 0;
+    };
 `
 
 export const SubmitButton = styled.button.withConfig({
-    shouldForwardProp: (prop) => 'centered' !== prop,
+    shouldForwardProp: (prop) => 'centered' !== prop && 'back' !== prop,
   })`
     // TODO: import font!
     // @import url('https://fonts.googleapis.com/css2?family=Irish+Grover&display=swap');
 
-    background-color: #C8DE00;
     font-family: "Irish Grover", sans-serif;
     padding: 7px 30px;
     border: none;
-    align-self: ${({ centered }) => centered ? ` center `: `flex-end`};
-    ${({ centered }) => !centered && `
+    ${({ centered, back }) => centered ? `align-self: center;` :
+    `
         position: absolute;
-        top: 415px;
-        left: 130px;
+        top: 450px;
+        left: ${back ? '40px' : '160px'};
     `};
+
     color: white;
-    cursor: pointer;
+
+    ${({$disabled}) => $disabled ? `
+        background-color: darkgray;
+    ` : `
+        background-color: #C8DE00;
+        cursor: pointer;
+    `}
 `
