@@ -31,7 +31,6 @@ export function ConnectionProvider ({children}) {
       case USER_ACTIONS.GET_ALL_BASE_MONSTERS:
         return getBaseMonsters();
       case USER_ACTIONS.CHOOSE_MONSTER:
-        console.log({params})
         await chooseMonster(params.monsterType, params.monsterImg)
         break;
       default:
@@ -49,7 +48,7 @@ export function ConnectionProvider ({children}) {
   async function activateUser (sugarIntake) {
     try{
       const res = await userInstance.functions.activate_user({uid: user.uid, sugar_amount: sugarIntake})
-      setUser({...user, sid:USER_STATUSES.TEST_USER, sugar_amount: sugarIntake})
+      setUser({...user, sid:USER_STATUSES.TEST_USER, sugarAmount: sugarIntake})
       console.log(res)
     } catch (err) {
       console.log(err)
@@ -89,8 +88,8 @@ export function ConnectionProvider ({children}) {
       setUser({...user, reports: newReporsts })
       alert("Snack added successfully!")
     } catch (err) {
-      console.log(err)
       alert(getErrMessage(err))
+      throw new Error(err)
     }
   }
 

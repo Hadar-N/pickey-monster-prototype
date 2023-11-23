@@ -30,7 +30,7 @@ export default function ChooseMonster() {
             <FormTitle style={{ fontSize: "24px"}}>
                 Pick Your Avatar!
             </FormTitle>
-        <FormGrid>
+        <FormGrid style={{marginTop:"20px"}}>
             {
                 allMons && allMons.map((mon) => 
                     <ImageContainer $is_chosen={mon?.mon_type === chosenMon} key= {mon?.mon_type}>

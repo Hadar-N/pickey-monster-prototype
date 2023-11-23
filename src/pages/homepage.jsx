@@ -37,8 +37,9 @@ export default function HomePage() {
     const handleReport = (e) => {
         navigate('/report')
     }
-
-
+    const handleHistory = (e) => {
+        navigate('/history')
+    }
 
     return (
         <FlexFormContainer style={{alignItems:"center"}}>
@@ -46,16 +47,15 @@ export default function HomePage() {
                 {/* <MonsterImage src={SnackCircle} alt="" /> */}
                 <MonsterImage src={user.monsterImg} alt="" />
             </ImageContainer>
-            <h1 style={{textAlign: "center"}}>
-                Welcome back, {user.uname}
-            </h1>
-            <FormGrid>
-                <DataRoundContainer>
-                    <div style={{fontSize: '24px', fontWeight: 600}}>{today}/{Math.round(user.sugarAmount)}gr</div>
-                    <div style={{fontSize: '14px'}}>sugar/day</div>
+            <div style={{textAlign: "center", fontSize: "24px", fontWeight: 600}}>Welcome back, {user.uname}</div>
+            <div style={{textAlign: "center"}}>today you had {today}/{Math.round(user.sugarAmount)}gr sugar!</div>
+            <p />
+            <FormGrid style={{gap: "25px"}}>
+                <DataRoundContainer style={{cursor: "pointer"}} onClick={handleHistory}>
+                    <div style={{fontSize: '15px', fontWeight: 600}}>Snack from History</div>
                 </DataRoundContainer>
                 <DataRoundContainer style={{cursor: "pointer"}} onClick={handleReport}>
-                    <div style={{fontSize: '20px', fontWeight: 600}}>Add Snack</div>
+                    <div style={{fontSize: '15px', fontWeight: 600}}>Search Snack</div>
                 </DataRoundContainer>
             </FormGrid>
             {Object.keys(stats).length && <BarChart

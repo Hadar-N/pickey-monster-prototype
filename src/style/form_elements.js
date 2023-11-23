@@ -103,7 +103,7 @@ export const SubmitButton = styled.button.withConfig({
 
     color: white;
 
-    ${({$disabled}) => $disabled ? `
+    ${({disabled}) => disabled ? `
         background-color: darkgray;
     ` : `
         background-color: #C8DE00;
