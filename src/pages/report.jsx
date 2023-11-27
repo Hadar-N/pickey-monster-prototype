@@ -1,20 +1,22 @@
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 import { useNavigate } from 'react-router-dom';
 import { MenuItem } from "@mui/material";
 import { InputField, FormTitle, SubmitButton, FlexFormContainer, FormGrid, FormText, SelectField } from "../style/form_elements"
 import { FoodSpecBox, FoodsOptionsBox, FoodImage, FoodSpecBoxImg } from '../style/general'
 import { useConnection, useUserActions } from "../utils/ConnectionContext";
 import { USER_ACTIONS } from "../utils/consts"
-import { searchItems, getItemTotalSugars } from '../utils/nutritionixApi'
+import { SUPPORTED_UNITS, useNutritionix } from '../utils/nutritionixApi'
 import MagGlass from '../assets/magnifier-5.png'
 
 export default function ReportPage() {
-    const [formContent, setFormContent] = useState({weight: "", measurement: "", total_sugar:"", name: ""})
+    const [formContent, setFormContent] = useState({weight: "", measurement: "", totalSugar:"", name: ""})
     const [foodOptions, setFoodOptions] = useState([])
     const [chosenSnack, setChosenSnack] = useState()
     const userActions = useUserActions();
     const user = useConnection();
     const navigate = useNavigate()
+    const [searchItems, getItemTotalSugars] = useNutritionix()
+    const ITEM_NOT_FOUND = "404_item";
     
     const setRelevantInfo = (e) => {
         const contentChange = {};
@@ -25,9 +27,13 @@ export default function ReportPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try{
+            const chosenSnackData = foodOptions.find(item => item.food_name === chosenSnack);
+            const totalSugar = chosenSnack === ITEM_NOT_FOUND ? formContent.totalSugar : getItemTotalSugars(chosenSnackData)
+            const snackName = chosenSnack === ITEM_NOT_FOUND ? formContent.name : chosenSnackData.food_name;
             await userActions(USER_ACTIONS.REPORT_SNACK, {
-                snackName: formContent.name, 
-                snackTotalSugar: getItemTotalSugars(foodOptions.find(item => item.food_name === chosenSnack)) || formContent.total_sugar});
+                snackName: snackName, 
+                snackTotalSugar: totalSugar
+            })
             navigate('/home');
         } catch (err) {}
     }
@@ -50,8 +56,17 @@ export default function ReportPage() {
             <FoodSpecBoxImg key={foodItem.food_name} name={foodItem.food_name} $isChosen={chosenSnack===foodItem.food_name} onClick={chooseSpecificSnack}>
                 <FoodImage src={foodItem.photo?.thumb} alt=""/>
                 <div style={{fontSize: "12px", width: "100%"}}><b style={{fontSize: "14px" }}>{foodItem.food_name}</b><br /><span>{foodItem.brand_name}</span></div>
-                <div>{getItemTotalSugars(foodItem)}gr sugar</div>
+                <div>{getItemTotalSugars(foodItem)}<br /><span style={{fontSize: "12px"}}>gr sugar</span></div>
             </FoodSpecBoxImg>
+        )
+    }
+
+    const getNotOnListBox = () => {
+        return (
+            <FoodSpecBox key={ITEM_NOT_FOUND} name={ITEM_NOT_FOUND} $isChosen={chosenSnack===ITEM_NOT_FOUND} onClick={chooseSpecificSnack}>
+                <div style={{fontSize: "12px", width: "100%"}}><b style={{fontSize: "14px" }}>Can't find item?</b><br /><span>Type in its' total sugars</span></div>
+                <div><InputField name="totalSugar" onChange={setRelevantInfo} style={{width: "30px"}}/><br /><span style={{fontSize: "12px"}}>gr sugar</span></div>
+            </FoodSpecBox>
         )
     }
 
@@ -83,28 +98,23 @@ export default function ReportPage() {
                         onChange={setRelevantInfo}
                         style={{color: 'white', width: "30px"}}
                     >
-                        <MenuItem value={"gr"}>gr</MenuItem>
-                        <MenuItem value={"ml"}>ml</MenuItem>
+                        {SUPPORTED_UNITS.map(unit => <MenuItem key={unit} value={unit}>{unit}</MenuItem>)}
                     </SelectField>
                 </div>
             </div>
             <div>
                 <FormText>Snack Name</FormText>
                 <div style={{display: "flex"}}>
-                    <InputField name="name" onChange={setRelevantInfo}/>
+                    <InputField name="name" onChange={setRelevantInfo} style={{marginTop: "2px", width: "100%"}}/>
                     <img src={MagGlass} alt="" style={{height: "20px", width: "20px", cursor: "pointer", marginLeft: "5px"}} onClick={searchNutrition}/>
                 </div>
             </div>
-            {/* <div>
-                <FormText>Sugar (gr)</FormText>
-                <InputField name="total_sugar" onChange={setRelevantInfo}/>
-            </div> */}
 
         </FormGrid>
         <FoodsOptionsBox>
             {foodOptions.map(getFoodBox)}
+            {getNotOnListBox()}
         </FoodsOptionsBox>
-        {/** TODO: Not on list? */}
 
         <SubmitButton onClick={handleSubmit} disabled={!chosenSnack}>Report</SubmitButton>
         <SubmitButton back="true" onClick={goBack}>Back</SubmitButton>

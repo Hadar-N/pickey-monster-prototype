@@ -48,7 +48,7 @@ export default function HomePage() {
                 <MonsterImage src={user.monsterImg} alt="" />
             </ImageContainer>
             <div style={{textAlign: "center", fontSize: "24px", fontWeight: 600}}>Welcome back, {user.uname}</div>
-            <div style={{textAlign: "center"}}>today you had {today}/{Math.round(user.sugarAmount)}gr sugar!</div>
+            <div style={{textAlign: "center", color: "black"}}>today you had {today.toFixed(2)}/{Math.round(user.sugarAmount)}gr sugar!</div>
             <p />
             <FormGrid style={{gap: "25px"}}>
                 <DataRoundContainer style={{cursor: "pointer"}} onClick={handleHistory}>

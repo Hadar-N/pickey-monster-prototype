@@ -1,15 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useMemo, useState } from "react"
 import { useNavigate } from 'react-router-dom';
-import { MenuItem } from "@mui/material";
-import { InputField, FormTitle, SubmitButton, FlexFormContainer, FormGrid, FormText, SelectField } from "../style/form_elements"
+import { FormTitle, SubmitButton, FlexFormContainer } from "../style/form_elements"
 import { FoodSpecBox, FoodsOptionsBox } from '../style/general'
 import { useConnection, useUserActions } from "../utils/ConnectionContext";
 import { USER_ACTIONS } from "../utils/consts"
-import { searchItems, getItemTotalSugars } from '../utils/nutritionixApi'
-import MagGlass from '../assets/magnifier-5.png'
 
 export default function HistoryPage() {
-    const [foodOptions, setFoodOptions] = useState([])
     const [chosenSnack, setChosenSnack] = useState()
     const userActions = useUserActions();
     const user = useConnection();
@@ -17,7 +13,7 @@ export default function HistoryPage() {
     
     const sortedList = useMemo(() => {
         const allSnackNames = new Set();
-        const sorted = user.reports?.sort((a,b) => a.timestamp < b.timestamp? 1 : -1 );
+        const sorted = user.reports?.sort((a,b) => a.timestamp < b.timestamp? 1 : -1 ) || [];
         const res = [];
         for(let item of sorted) {
             if (!allSnackNames.has(item.snack_name)) {
@@ -32,7 +28,7 @@ export default function HistoryPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try{
-            const currSnackData = user.reports.find(item => item.timestamp == chosenSnack)
+            const currSnackData = user.reports.find(item => item.snack_name === chosenSnack)
             await userActions(USER_ACTIONS.REPORT_SNACK, {
                 snackName: currSnackData.snack_name, 
                 snackTotalSugar: currSnackData.snack_total_sugar
@@ -47,7 +43,7 @@ export default function HistoryPage() {
 
     const getFoodBox = (foodItem) => {
         return (
-            <FoodSpecBox key={foodItem.timestamp} name={foodItem.timestamp} $isChosen={chosenSnack==foodItem.timestamp} onClick={chooseSpecificSnack}>
+            <FoodSpecBox key={foodItem.snack_name} name={foodItem.snack_name} $isChosen={chosenSnack===foodItem.snack_name} onClick={chooseSpecificSnack}>
                 <div style={{fontSize: "12px", width: "100%"}}><b style={{fontSize: "14px" }}>{foodItem.snack_name}</b></div>
                 <div>{foodItem.snack_total_sugar}gr sugar</div>
             </FoodSpecBox>
