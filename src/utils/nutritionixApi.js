@@ -2,7 +2,7 @@ import convert from 'convert-units'
 import axios from 'axios'
 
 import { useUserActions } from "../utils/ConnectionContext"
-import { useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { USER_ACTIONS } from './consts'
 
 const NUTRITIONIX_BASE = "https://trackapi.nutritionix.com/v2"
@@ -28,42 +28,45 @@ export function useNutritionix() {
     const userActions = useUserActions();
     const [headersData, setHeaders] = useState({});
     const countRef = useRef(0);
-    const forceFifty = useRef(false);
 
-    const getHeadersBasedOnCount = useMemo(() => {
+    useEffect(() => {
+        const getData= async() => {
+            const res = await userActions(USER_ACTIONS.GET_NUTRITIONIX_DATA)
+            setHeaders({...res, count: res.count%NUTRITIONIX_API_AMOUNT});
+        }
+        getData();
+    }, [])
+
+    const getHeadersBasedOnCount = useCallback((forceFifty) => {
         let res = null;
-        if(forceFifty.current && headersData.count) {
+        if(forceFifty && headersData.count) {
             if(headersData.count + countRef.current <= NUTRITIONIX_API_AMOUNT) countRef.current=NUTRITIONIX_API_AMOUNT-headersData.count;
             else {
                 alert("issue with credentials, please retry logging in");
                 return null;
             }
-            forceFifty.current = false;
         }
 
-        if(!Object.keys(headersData).length) {
-            const getData= async() => {
-                const res = await userActions(USER_ACTIONS.GET_NUTRITIONIX_DATA)
-                setHeaders({...res, count: res.count%NUTRITIONIX_API_AMOUNT});
-            }
-            getData();
+        if(!Object.keys(headersData).length) { return;
         } else if ((headersData.count + countRef.current) <= NUTRITIONIX_API_AMOUNT) {
             res= headersData.keys[0];
         } else {
             res= headersData.keys[1];
         }
         return res;
-    }, [headersData, countRef, forceFifty])
+    }, [headersData, countRef])
 
     const callApi = async ({method, body, url}) => {
         let response;
 
         let attempts = 2;
+        let forceFifty=false;
         while(attempts) {
+            // console.log(forceFifty, countRef.current, getHeadersBasedOnCount(forceFifty)?.loc)
             try{
                 response = await axios({
                     method,
-                    headers: getHeadersBasedOnCount,
+                    headers: getHeadersBasedOnCount(forceFifty),
                     url: `${NUTRITIONIX_BASE}${url}`,
                     data: body
                 });
@@ -73,7 +76,7 @@ export function useNutritionix() {
                 response = err;
                 if(err.message === ERR_MESSAGES.UNAUTHORIZED) {
                     attempts--;
-                    forceFifty.current = true;
+                    forceFifty = true;
                 } else  {
                     break;
                 }
@@ -133,8 +136,10 @@ export function useNutritionix() {
             } catch (err) {
                 if(err.message.startsWith(ERR_MESSAGES.UNSUPPORTED_UNIT_PREFIX)) return; //If unsupported unit- doesn't change sugar data
                 if(err.message.startsWith(ERR_MESSAGES.INCOMPATIBLE_MEASURES_PREFIX)) {
-                    newUnit = "gr";
-                    newWeight = convert(currWeight).from(currUnit).to('g');
+                    try{
+                        newUnit = "gr";
+                        newWeight = convert(currWeight).from(currUnit).to('g');
+                    } catch (err) {console.error("doesn't fit any supported measure: ", currUnit)}
                 } else {
                     console.error('convert issue', {message: err.message, err})
                 }

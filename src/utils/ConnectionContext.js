@@ -134,7 +134,8 @@ export function ConnectionProvider ({children}) {
   async function getNutritionixData () {
     let res = {};
 
-    if(nutritionixData){
+    // console.log(nutritionixData?.count . nutritionixData?.keys?.[0].loc)
+    if(nutritionixData && nutritionixData?.count > nutritionixData?.keys?.[0].loc * 50){
       res = nutritionixData;
     } else {
       try{
