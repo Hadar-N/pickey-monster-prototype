@@ -28,7 +28,6 @@ export default function LoginPage() {
 
         if (user.sid === USER_STATUSES.INACTIVE) {
             const totalSugar = calcTotalSugarInGram(formContent)
-            console.log({totalSugar})
             if(totalSugar) {
                 userActions(USER_ACTIONS.ACTIVATE_USER, {sugarAmount: totalSugar})
             } else {

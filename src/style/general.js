@@ -45,7 +45,6 @@ export const FoodsOptionsBox = styled.div`
 
 export const FoodSpecBox = styled.div`
   width: 98%;
-  min-height: 50px;
   border: 2px solid ${({$isChosen}) => $isChosen ? 'black' : 'darkgray'};
   ${({$isChosen}) => $isChosen && 'background-color: rgba(0,0,0,0.1)'};
   display: grid;

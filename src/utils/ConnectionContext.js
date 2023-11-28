@@ -37,7 +37,7 @@ export function ConnectionProvider ({children}) {
         await reportSnack(params.snackName, params.snackTotalSugar)
         break;
       case USER_ACTIONS.GET_ALL_BASE_MONSTERS:
-        res= getBaseMonsters();
+        res= await getBaseMonsters();
       case USER_ACTIONS.CHOOSE_MONSTER:
         await chooseMonster(params.monsterType, params.monsterImg)
         break;
@@ -57,16 +57,13 @@ export function ConnectionProvider ({children}) {
   function getErrMessage(err) {
     console.log({err, mes: err.message})
     return (err.message).includes("Cannot read properties of undefined") ? "error in connection, please retry logging in" : err.error;
-    
   }  
 
   async function activateUser (sugarIntake) {
     try{
       const res = await userInstance.functions.activate_user({uid: user.uid, sugar_amount: sugarIntake})
       setUser({...user, sid:USER_STATUSES.TEST_USER, sugarAmount: sugarIntake})
-      console.log(res)
     } catch (err) {
-      console.log(err)
       alert(getErrMessage(err))
     }
   }
@@ -74,22 +71,17 @@ export function ConnectionProvider ({children}) {
   async function getBaseMonsters () {
     try{
       const res = await userInstance.functions.get_base_monsters();
-      console.log(res);
       return res;
     } catch (err) {
-      console.log(err)
       alert(getErrMessage(err))
     }
   }
 
   async function chooseMonster (monsterType, monsterImg) {
     try{
-      console.log(user.uid, monsterType, monsterImg)
       const res = await userInstance.functions.attach_mon_to_user({uid: user.uid, mon_type: monsterType});
       setUser({...user, monsterImg })
-      console.log(res, monsterType, monsterImg);
     } catch (err) {
-      console.log(err)
       alert(getErrMessage(err))
     }
   }
@@ -104,7 +96,6 @@ export function ConnectionProvider ({children}) {
       alert("Snack added successfully!")
     } catch (err) {
       alert(getErrMessage(err))
-      console.error("reportSnack", err)
     }
   }
 
@@ -135,12 +126,13 @@ export function ConnectionProvider ({children}) {
         alert('user not found')
       }      
     } catch(err) {
+      alert("login failed, please refresh page")
       console.error("Failed to log in", err);
     }
   }
 
   async function getNutritionixData () {
-    let res;
+    let res = {};
 
     if(nutritionixData){
       res = nutritionixData;
@@ -150,22 +142,18 @@ export function ConnectionProvider ({children}) {
         setNutData(res);
       } catch (err) {
         alert(getErrMessage(err))
-        console.error("getNutritionixData", err)
       }
     }
 
-    return {count : res.curr_count, keys : res.keys.sort((a,b) => a.loc > b.loc ? 1 : -1)}
+    return {count : res.curr_count, keys : res.keys?.sort((a,b) => a.loc > b.loc ? 1 : -1)}
   }
 
   async function addToNutritionixCount (amountOfCalls) {
     if(amountOfCalls) {
       try{
-        console.log({amountOfCalls})
         const res = await userInstance.functions.add_to_nutrition_count({add_to_count: amountOfCalls});
         setNutData({...nutritionixData, count: nutritionixData.count+amountOfCalls })
-        console.log(res);
       } catch (err) {
-        console.log(err)
         alert(getErrMessage(err))
       }
     }

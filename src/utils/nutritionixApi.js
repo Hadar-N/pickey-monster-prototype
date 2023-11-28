@@ -24,9 +24,6 @@ const ERR_MESSAGES = {
 
 const MAX_ITEMS = 5;
 
-// TODO: force get to 50 (forceFifty)
-// TODO: create more nutrition keys
-
 export function useNutritionix() {
     const userActions = useUserActions();
     const [headersData, setHeaders] = useState({});
@@ -34,28 +31,53 @@ export function useNutritionix() {
     const forceFifty = useRef(false);
 
     const getHeadersBasedOnCount = useMemo(() => {
+        let res = null;
+        if(forceFifty.current && headersData.count) {
+            if(headersData.count + countRef.current <= NUTRITIONIX_API_AMOUNT) countRef.current=NUTRITIONIX_API_AMOUNT-headersData.count;
+            else {
+                alert("issue with credentials, please retry logging in");
+                return null;
+            }
+            forceFifty.current = false;
+        }
+
         if(!Object.keys(headersData).length) {
             const getData= async() => {
                 const res = await userActions(USER_ACTIONS.GET_NUTRITIONIX_DATA)
                 setHeaders({...res, count: res.count%NUTRITIONIX_API_AMOUNT});
             }
-            getData();    
-        } else if ((headersData.count + countRef.current) <= NUTRITIONIX_API_AMOUNT) return headersData.keys[0];
-        else return headersData.keys[1]
-    }, [headersData, countRef])
+            getData();
+        } else if ((headersData.count + countRef.current) <= NUTRITIONIX_API_AMOUNT) {
+            res= headersData.keys[0];
+        } else {
+            res= headersData.keys[1];
+        }
+        return res;
+    }, [headersData, countRef, forceFifty])
 
     const callApi = async ({method, body, url}) => {
         let response;
-        try{
-            response = await axios({
-                method,
-                headers: getHeadersBasedOnCount,
-                url: `${NUTRITIONIX_BASE}${url}`,
-                data: body
-            });
-        } catch (err) {
-            console.error("callApi", {err, message: err.message})
-            response = err;
+
+        let attempts = 2;
+        while(attempts) {
+            try{
+                response = await axios({
+                    method,
+                    headers: getHeadersBasedOnCount,
+                    url: `${NUTRITIONIX_BASE}${url}`,
+                    data: body
+                });
+                break;
+            } catch (err) {
+                console.error("callApi", {err, message: err.message, shouldGoIn: err.message === ERR_MESSAGES.UNAUTHORIZED})
+                response = err;
+                if(err.message === ERR_MESSAGES.UNAUTHORIZED) {
+                    attempts--;
+                    forceFifty.current = true;
+                } else  {
+                    break;
+                }
+            }
         }
 
         return response;
@@ -65,7 +87,6 @@ export function useNutritionix() {
         const res = [];
         try{
             const freeSearchRes = await searchByFreeText(`${weight}${unit} ${name}`);
-            console.log({freeSearchRes})
             countRef.current++;
             res.push(...freeSearchRes.slice(0,MAX_ITEMS))
         } catch (err) {
@@ -73,11 +94,9 @@ export function useNutritionix() {
         }
     
         if(res.length < MAX_ITEMS) {
-            console.log("LENGTH", res.length)
             try{
                 const instantSearchRes = await searchInstantAndGetSugar(name);
                 countRef.current++;
-                console.log({instantSearchRes})
     
                 for(let foodItem of instantSearchRes) {
                     matchFoodItemDetailsToWeight(foodItem, weight);
@@ -90,6 +109,7 @@ export function useNutritionix() {
         }
     
         userActions(USER_ACTIONS.ADD_TO_NUTRITIONIX_COUNT, {amountOfCalls: countRef.current})
+        countRef.current = 0;
         return res;
     }
     
@@ -99,8 +119,6 @@ export function useNutritionix() {
         let {currUnit, currWeight} = changeNutUnsopportedUnits(foodItem.serving_unit, foodItem.serving_qty)
         let newUnit;
         let newWeight;
-
-        console.log({currUnit, currWeight, ogUnit: foodItem.serving_unit})
 
         if (foodItem.serving_unit !== currUnit) {
             needToUpdateAmount = true;
@@ -125,11 +143,9 @@ export function useNutritionix() {
 
         if(needToUpdateAmount && newWeight) {
             const proportionsBetweenSizes = weight / newWeight;
-            console.log('updating for og unit:',foodItem.serving_unit, 'new unit', newUnit )
     
             Object.keys(foodItem).forEach(key => {
                 if(key.startsWith("nf_")) {
-                    console.log(key, foodItem[key], proportionsBetweenSizes)
                     foodItem[key] = Number((foodItem[key]*proportionsBetweenSizes).toFixed(2)) || 0
                 }
             })
@@ -176,8 +192,7 @@ export function useNutritionix() {
                         use_raw_foods: false
                     }
             const response = await callApi({method: 'post', url: TEXT_SEARCH_API, body})
-            returns = response.data?.foods;
-            console.log("search res:", returns)
+            returns = response.data?.foods || [];
         } catch (err) {
             if(err?.message === ERR_MESSAGES.FOOD_NOT_FOUND) {
                 returns= [];
@@ -203,7 +218,6 @@ export function useNutritionix() {
     
                 if(Object.keys(filteredItems).length > MAX_ITEMS) break;
             }
-            console.log("filteredItems", Object.values(filteredItems) || [])
             return Object.values(filteredItems) || [];
         } catch(err) {
             console.error("searchInstantAndGetSugar err",{message: err.message, err})
@@ -214,8 +228,7 @@ export function useNutritionix() {
         let returns = [];
         try{
             const response = await callApi({method: 'post', url: INSTANT_API, body: {query: text}})
-            returns = response.data?.branded;
-            console.log("instant res:", returns)
+            returns = response.data?.branded || [];
         } catch (err) {
             console.error('searchInstant', {message: err.message, err})
             returns = [];
@@ -229,7 +242,6 @@ export function useNutritionix() {
         try{
             const response = await callApi({method: 'get', url: `${SEARCH_BY_ID_API}?nix_item_id=${nix_id}`})
             returns = response.data?.foods?.[0]
-            console.log("nix res:", returns)
         } catch (err) {
             console.error('searchInstant', err.message, err)
             returns = [];
@@ -240,7 +252,7 @@ export function useNutritionix() {
     
     const getItemTotalSugars = (nut_item) => {
         if (!nut_item) return nut_item;
-        return nut_item.nf_sugars || nut_item.full_nutrients?.find(i => i.attr_id = TOTAL_SUGARS_ID)
+        return nut_item.nf_sugars || nut_item.full_nutrients?.find(i => i.attr_id = TOTAL_SUGARS_ID)?.value
     }
 
     return [searchItems, getItemTotalSugars]

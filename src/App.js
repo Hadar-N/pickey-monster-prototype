@@ -26,7 +26,6 @@ function App() {
     }
   }, [user] )
 
-  // TODO: Update Images!!
   // TODO: "?" page
 
   return (

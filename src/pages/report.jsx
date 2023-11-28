@@ -28,7 +28,7 @@ export default function ReportPage() {
         e.preventDefault();
         try{
             const chosenSnackData = foodOptions.find(item => item.food_name === chosenSnack);
-            const totalSugar = chosenSnack === ITEM_NOT_FOUND ? formContent.totalSugar : getItemTotalSugars(chosenSnackData)
+            const totalSugar = chosenSnack === ITEM_NOT_FOUND ? Number(formContent.totalSugar) : getItemTotalSugars(chosenSnackData) || 0
             const snackName = chosenSnack === ITEM_NOT_FOUND ? formContent.name : chosenSnackData.food_name;
             await userActions(USER_ACTIONS.REPORT_SNACK, {
                 snackName: snackName, 
@@ -55,8 +55,8 @@ export default function ReportPage() {
         return (
             <FoodSpecBoxImg key={foodItem.food_name} name={foodItem.food_name} $isChosen={chosenSnack===foodItem.food_name} onClick={chooseSpecificSnack}>
                 <FoodImage src={foodItem.photo?.thumb} alt=""/>
-                <div style={{fontSize: "12px", width: "100%"}}><b style={{fontSize: "14px" }}>{foodItem.food_name}</b><br /><span>{foodItem.brand_name}</span></div>
-                <div>{getItemTotalSugars(foodItem)}<br /><span style={{fontSize: "12px"}}>gr sugar</span></div>
+                <div style={{fontSize: "12px", width: "100%"}}><b style={{fontSize: "14px" }}>{foodItem.food_name}</b><br /><span>{foodItem.brand_name || ""}</span></div>
+                <div>{getItemTotalSugars(foodItem) || 0}<br /><span style={{fontSize: "12px"}}>gr sugar</span></div>
             </FoodSpecBoxImg>
         )
     }
@@ -112,7 +112,7 @@ export default function ReportPage() {
 
         </FormGrid>
         <FoodsOptionsBox>
-            {foodOptions.map(getFoodBox)}
+            {foodOptions && foodOptions.map(getFoodBox)}
             {getNotOnListBox()}
         </FoodsOptionsBox>
 
