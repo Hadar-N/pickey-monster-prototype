@@ -1,11 +1,8 @@
 import convert from 'convert-units'
 import axios from 'axios'
 
-// import SearchRes from '../assets/search_res.json'
-// import InstantRes from '../assets/instant_res.json'
-// import NixAllRes from '../assets/NixId.json'
 import { useUserActions } from "../utils/ConnectionContext"
-import { useEffect, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { USER_ACTIONS } from './consts'
 
 const NUTRITIONIX_BASE = "https://trackapi.nutritionix.com/v2"
@@ -18,42 +15,58 @@ const ADDED_SUGARS_ID = 539;
 export const SUPPORTED_UNITS = ['gr', 'ml'];
 const NUTRITIONIX_API_AMOUNT = 50;
 
+const ERR_MESSAGES = {
+    FOOD_NOT_FOUND : "We couldn't match any of your foods",
+    UNSUPPORTED_UNIT_PREFIX: "Unsupported unit",
+    INCOMPATIBLE_MEASURES_PREFIX: "Cannot convert incompatible measures",
+    UNAUTHORIZED: "Request failed with status code 401"
+}
+
 const MAX_ITEMS = 5;
 
-// TODO: change credentials by amount of searches! functions name: add_to_nutrition_count({add_to_count}), get_nutrition_keys
+// TODO: force get to 50 (forceFifty)
 // TODO: create more nutrition keys
 
 export function useNutritionix() {
     const userActions = useUserActions();
-    const [headers, setHeaders] = useState({})
+    const [headersData, setHeaders] = useState({});
+    const countRef = useRef(0);
+    const forceFifty = useRef(false);
 
-    useEffect(() => {
-        const getData= async() => {
-            const res = await userActions(USER_ACTIONS.GET_NUTRITIONIX_DATA)
-            setHeaders(res.keys);
-        }
-        getData();
-    } , [userActions, setHeaders])
+    const getHeadersBasedOnCount = useMemo(() => {
+        if(!Object.keys(headersData).length) {
+            const getData= async() => {
+                const res = await userActions(USER_ACTIONS.GET_NUTRITIONIX_DATA)
+                setHeaders({...res, count: res.count%NUTRITIONIX_API_AMOUNT});
+            }
+            getData();    
+        } else if ((headersData.count + countRef.current) <= NUTRITIONIX_API_AMOUNT) return headersData.keys[0];
+        else return headersData.keys[1]
+    }, [headersData, countRef])
 
     const callApi = async ({method, body, url}) => {
-        console.log({method, headers, url: `${NUTRITIONIX_BASE}${url}`})
-        const response = await axios({
-            method,
-            headers,
-            url: `${NUTRITIONIX_BASE}${url}`,
-            data: body
-        });
+        let response;
+        try{
+            response = await axios({
+                method,
+                headers: getHeadersBasedOnCount,
+                url: `${NUTRITIONIX_BASE}${url}`,
+                data: body
+            });
+        } catch (err) {
+            console.error("callApi", {err, message: err.message})
+            response = err;
+        }
 
         return response;
     }
 
     const searchItems = async (weight, unit, name) => { 
         const res = [];
-        let amountOfCalls = 0;
         try{
             const freeSearchRes = await searchByFreeText(`${weight}${unit} ${name}`);
             console.log({freeSearchRes})
-            amountOfCalls++;
+            countRef.current++;
             res.push(...freeSearchRes.slice(0,MAX_ITEMS))
         } catch (err) {
             console.error("freeSearchRes err", err)
@@ -63,12 +76,12 @@ export function useNutritionix() {
             console.log("LENGTH", res.length)
             try{
                 const instantSearchRes = await searchInstantAndGetSugar(name);
-                amountOfCalls++;
+                countRef.current++;
                 console.log({instantSearchRes})
     
                 for(let foodItem of instantSearchRes) {
                     matchFoodItemDetailsToWeight(foodItem, weight);
-                    amountOfCalls++;
+                    countRef.current++;
                 }
                 res.push(...instantSearchRes.slice(0,MAX_ITEMS))
             } catch (err) {
@@ -76,7 +89,7 @@ export function useNutritionix() {
             }
         }
     
-        userActions(USER_ACTIONS.ADD_TO_NUTRITIONIX_COUNT, {amountOfCalls})
+        userActions(USER_ACTIONS.ADD_TO_NUTRITIONIX_COUNT, {amountOfCalls: countRef.current})
         return res;
     }
     
@@ -100,9 +113,13 @@ export function useNutritionix() {
                 newUnit = "ml";
                 newWeight = convert(currWeight).from(currUnit).to(newUnit);
             } catch (err) {
-                newUnit = "gr";
-                newWeight = convert(currWeight).from(currUnit).to('g');
-                // TODO: don't crush if unit is not on list!
+                if(err.message.startsWith(ERR_MESSAGES.UNSUPPORTED_UNIT_PREFIX)) return; //If unsupported unit- doesn't change sugar data
+                if(err.message.startsWith(ERR_MESSAGES.INCOMPATIBLE_MEASURES_PREFIX)) {
+                    newUnit = "gr";
+                    newWeight = convert(currWeight).from(currUnit).to('g');
+                } else {
+                    console.error('convert issue', {message: err.message, err})
+                }
             }
         }
 
@@ -111,16 +128,20 @@ export function useNutritionix() {
             console.log('updating for og unit:',foodItem.serving_unit, 'new unit', newUnit )
     
             Object.keys(foodItem).forEach(key => {
-                if(key.startsWith("nf_")) foodItem[key] = Number((foodItem[key]*proportionsBetweenSizes).toFixed(2))
+                if(key.startsWith("nf_")) {
+                    console.log(key, foodItem[key], proportionsBetweenSizes)
+                    foodItem[key] = Number((foodItem[key]*proportionsBetweenSizes).toFixed(2)) || 0
+                }
             })
         }
     }
 
     const changeNutUnsopportedUnits = (unit, weight) => {
-        let currUnit;
-        let currWeight;
+        let currUnit = unit;
+        let currWeight = weight;
 
-        if (unit.startsWith('fl.')) unit= unit.substr(3);
+        if (currUnit.startsWith('fl.') || currUnit.startsWith('fl ') ) currUnit= unit.substr(3);
+        else if (currUnit.substr(-1) === '.') currUnit = unit.substr(0, unit.length-1)
 
         switch (unit.toLowerCase()) {
             case "bottle":
@@ -129,41 +150,43 @@ export function useNutritionix() {
                 break;
             case "shake":
                 currUnit = 'ml';
-                currWeight = weight; 
                 break;
             case "tbsp":
                 currUnit = 'Tbs';
-                currWeight = weight; 
+                break;
+            case "gr":
+                currUnit = 'g';
+                break;    
+            case "Fluid ounce":
+                currUnit = 'oz';
                 break;
             default:
-                currUnit = unit;
-                currWeight = weight;
         }
 
         return {currUnit, currWeight}
     }
     
     const searchByFreeText = async (text) => {
-        // const response = {data: SearchRes};
-        const body = {
-                    query: text,
-                    timezone: "Asia/Taipei",
-                    line_delimited: false,
-                    use_raw_foods: false
-                }
-        const response = await callApi({method: 'post', url: TEXT_SEARCH_API, body})
-        console.log("search res:", response.data?.foods)
-    
-        /**
-         * when not found:
-         * data: {
-         *   "message": "We couldn't match any of your foods",
-         *   "id": "3d9792e0-98da-45bd-b354-90b75e8a254d"
-         * }
-         */
-    
-        return response.data?.foods;
-        //serving_weight_grams
+        let returns = [];
+        try{
+            const body = {
+                        query: text,
+                        timezone: "Asia/Taipei",
+                        line_delimited: false,
+                        use_raw_foods: false
+                    }
+            const response = await callApi({method: 'post', url: TEXT_SEARCH_API, body})
+            returns = response.data?.foods;
+            console.log("search res:", returns)
+        } catch (err) {
+            if(err?.message === ERR_MESSAGES.FOOD_NOT_FOUND) {
+                returns= [];
+            } else {
+                console.error('searchByFreeText', {messaage: err.messaage, err});
+            }
+        }
+        
+        return returns;
     }
     
     const searchInstantAndGetSugar = async (text) => {
@@ -183,23 +206,36 @@ export function useNutritionix() {
             console.log("filteredItems", Object.values(filteredItems) || [])
             return Object.values(filteredItems) || [];
         } catch(err) {
-            console.error("searchInstantAndGetSugar err",err)
+            console.error("searchInstantAndGetSugar err",{message: err.message, err})
         }
     }
     
     const searchInstant = async (text) => {
-        // const response = {data: InstantRes};
-        const response = await callApi({method: 'post', url: INSTANT_API, body: {query: text}})
-        console.log("instant res:", response.data)
+        let returns = [];
+        try{
+            const response = await callApi({method: 'post', url: INSTANT_API, body: {query: text}})
+            returns = response.data?.branded;
+            console.log("instant res:", returns)
+        } catch (err) {
+            console.error('searchInstant', {message: err.message, err})
+            returns = [];
+        }
     
-        return response.data?.branded;
+        return returns;
     }
     
     const searchByNixId = async (nix_id) => {
-        // const response = {data: NixAllRes[nix_id]?.nutritions} || {data: {}}
-        const response = await callApi({method: 'get', url: `${SEARCH_BY_ID_API}?nix_item_id=${nix_id}`})
-        console.log("nix res:", response.data?.foods?.[0])
-        return response?.data?.foods?.[0];
+        let returns = [];
+        try{
+            const response = await callApi({method: 'get', url: `${SEARCH_BY_ID_API}?nix_item_id=${nix_id}`})
+            returns = response.data?.foods?.[0]
+            console.log("nix res:", returns)
+        } catch (err) {
+            console.error('searchInstant', err.message, err)
+            returns = [];
+        }
+
+        return returns;
     }
     
     const getItemTotalSugars = (nut_item) => {

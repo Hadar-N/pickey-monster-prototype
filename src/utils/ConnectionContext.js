@@ -23,7 +23,8 @@ export function ConnectionProvider ({children}) {
   const [nutritionixData, setNutData] = useState(); 
 
   async function userActions (actionType, params = {}) {
-    setIsLoading(true);
+    console.log('userActions', actionType)
+    if(![USER_ACTIONS.ADD_TO_NUTRITIONIX_COUNT].includes(actionType)) setIsLoading(true);
     switch(actionType) {
       case USER_ACTIONS.LOGIN:
         await connectUser(params.uid)
@@ -44,6 +45,7 @@ export function ConnectionProvider ({children}) {
         setIsLoading(false);
         return returnData;
       case USER_ACTIONS.ADD_TO_NUTRITIONIX_COUNT:
+        setIsLoading(false);
         await addToNutritionixCount(params.amountOfCalls)
         break;
       default:
@@ -102,7 +104,7 @@ export function ConnectionProvider ({children}) {
       alert("Snack added successfully!")
     } catch (err) {
       alert(getErrMessage(err))
-      throw new Error(err)
+      console.error("reportSnack", err)
     }
   }
 
@@ -145,15 +147,14 @@ export function ConnectionProvider ({children}) {
     } else {
       try{
         res = await userInstance.functions.get_nutrition_keys();
-        console.log({res})
         setNutData(res);
       } catch (err) {
         alert(getErrMessage(err))
-        throw new Error(err)
+        console.error("getNutritionixData", err)
       }
     }
 
-    return {count : res.curr_count, keys : res.keys.sort((a,b) => a.loc > b.loc ? 1 : -1)[0]}
+    return {count : res.curr_count, keys : res.keys.sort((a,b) => a.loc > b.loc ? 1 : -1)}
   }
 
   async function addToNutritionixCount (amountOfCalls) {
