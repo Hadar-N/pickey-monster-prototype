@@ -24,6 +24,7 @@ export function ConnectionProvider ({children}) {
 
   async function userActions (actionType, params = {}) {
     console.log('userActions', actionType)
+    let res;
     if(![USER_ACTIONS.ADD_TO_NUTRITIONIX_COUNT].includes(actionType)) setIsLoading(true);
     switch(actionType) {
       case USER_ACTIONS.LOGIN:
@@ -36,14 +37,12 @@ export function ConnectionProvider ({children}) {
         await reportSnack(params.snackName, params.snackTotalSugar)
         break;
       case USER_ACTIONS.GET_ALL_BASE_MONSTERS:
-        return getBaseMonsters();
+        res= getBaseMonsters();
       case USER_ACTIONS.CHOOSE_MONSTER:
         await chooseMonster(params.monsterType, params.monsterImg)
         break;
       case USER_ACTIONS.GET_NUTRITIONIX_DATA:
-        const returnData = await getNutritionixData();
-        setIsLoading(false);
-        return returnData;
+        res = await getNutritionixData();
       case USER_ACTIONS.ADD_TO_NUTRITIONIX_COUNT:
         setIsLoading(false);
         await addToNutritionixCount(params.amountOfCalls)
@@ -52,6 +51,7 @@ export function ConnectionProvider ({children}) {
         alert(`actionType: ${actionType} not supported`)
     }
     setIsLoading(false);
+    return res;
   }
 
   function getErrMessage(err) {
@@ -158,14 +158,16 @@ export function ConnectionProvider ({children}) {
   }
 
   async function addToNutritionixCount (amountOfCalls) {
-    try{
-      console.log(amountOfCalls)
-      const res = await userInstance.functions.add_to_nutrition_count({add_to_count: amountOfCalls});
-      setNutData({...nutritionixData, count: nutritionixData.count+amountOfCalls })
-      console.log(res);
-    } catch (err) {
-      console.log(err)
-      alert(getErrMessage(err))
+    if(amountOfCalls) {
+      try{
+        console.log({amountOfCalls})
+        const res = await userInstance.functions.add_to_nutrition_count({add_to_count: amountOfCalls});
+        setNutData({...nutritionixData, count: nutritionixData.count+amountOfCalls })
+        console.log(res);
+      } catch (err) {
+        console.log(err)
+        alert(getErrMessage(err))
+      }
     }
   }
     return(

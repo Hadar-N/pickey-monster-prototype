@@ -14,7 +14,7 @@ export default function LoginPage() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        if([USER_STATUSES.TEST_USER, USER_STATUSES.MANAGER].includes(user.sid)) {
+        if(user.sid && [USER_STATUSES.TEST_USER, USER_STATUSES.MANAGER].includes(user.sid)) {
             if(user.monsterImg) {
                 navigate('/home')
             } else {

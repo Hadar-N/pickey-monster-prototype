@@ -17,7 +17,7 @@ export default function ChooseMonster() {
             setAllMons(res)
         }
         getMons();
-    }, [userActions])
+    }, [])
 
     const handleSubmit = async (e) => {
         e.preventDefault();
