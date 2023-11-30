@@ -21,6 +21,7 @@ export function ConnectionProvider ({children}) {
   const [userInstance, setUserInstance] = useState();
   const [isLoading, setIsLoading] = useState(false)
   const [nutritionixData, setNutData] = useState(); 
+  const [monsterStages, setMonsterStages] = useState([])
 
   async function userActions (actionType, params = {}) {
     console.log('userActions', actionType)
@@ -38,11 +39,16 @@ export function ConnectionProvider ({children}) {
         break;
       case USER_ACTIONS.GET_ALL_BASE_MONSTERS:
         res= await getBaseMonsters();
+        break;
+      case USER_ACTIONS.GET_ALL_STAGES_SAME_MONSTER:
+        res= await getAllStagesSameMonster();
+        break;
       case USER_ACTIONS.CHOOSE_MONSTER:
         await chooseMonster(params.monsterType, params.monsterImg)
         break;
       case USER_ACTIONS.GET_NUTRITIONIX_DATA:
         res = await getNutritionixData();
+        break;
       case USER_ACTIONS.ADD_TO_NUTRITIONIX_COUNT:
         setIsLoading(false);
         await addToNutritionixCount(params.amountOfCalls)
@@ -74,6 +80,18 @@ export function ConnectionProvider ({children}) {
       return res;
     } catch (err) {
       alert(getErrMessage(err))
+    }
+  }
+
+  async function getAllStagesSameMonster () {
+    if(monsterStages.length) return monsterStages;
+    try{
+      const res = await userInstance.functions.get_all_stages_same_monster({mon_type: user.monsterType});
+      setMonsterStages(res);
+      return res;
+    } catch (err) {
+      alert(getErrMessage(err))
+      return [];
     }
   }
 

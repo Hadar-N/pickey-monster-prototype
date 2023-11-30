@@ -12,6 +12,8 @@ import ChooseMonster from './pages/choosemonster';
 import ReportPage from './pages/report';
 import HistoryPage from './pages/history';
 
+import DescriptionBox from './pages/descriptionbox'
+
 import LoaderContent from './assets/fade-stagger-circles.svg'
 
 function App() {
@@ -26,10 +28,9 @@ function App() {
     }
   }, [user] )
 
-  // TODO: "?" page
-
   return (
       <CenterChildUsingFlex><MainWrapper>
+        {!["/", "/login", "/choosemon"].includes(location?.pathname) && <DescriptionBox />}
         <Loader $is_loading={isLoading}><img src={LoaderContent} alt="" /></Loader>
           <Routes>
             <Route path="/" element={<EntryPage />} />

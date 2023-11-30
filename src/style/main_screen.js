@@ -22,7 +22,7 @@ export const Loader = styled.div`
   position: absolute;
   width : ${VIEW_WIDTH}px;
   height : ${VIEW_HEIGHT}px;
-  z-index: 1;
+  z-index: 5;
 
   img{
     width : ${VIEW_WIDTH / 3}px;

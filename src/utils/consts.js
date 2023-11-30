@@ -6,6 +6,7 @@ export const USER_ACTIONS = {
     ACTIVATE_USER : "activate_user",
     REPORT_SNACK : "report_snack",
     GET_ALL_BASE_MONSTERS: "get_all_base_monsters",
+    GET_ALL_STAGES_SAME_MONSTER: "get_all_stages_same_monster",
     CHOOSE_MONSTER: "choose_monster",
     GET_NUTRITIONIX_DATA: "get_nutritionix_data",
     ADD_TO_NUTRITIONIX_COUNT: "add_to_nutritionix_count"

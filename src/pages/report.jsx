@@ -87,7 +87,7 @@ export default function ReportPage() {
         <FormGrid isOneline="True">
             <div style={{display: "flex"}}>
                 <div>
-                    <FormText>Weight</FormText>
+                    <FormText>Snack Weight</FormText>
                     <InputField name="weight" type="number" style={{width: "50px"}} onChange={setRelevantInfo}/>
                 </div>
                 <div>

@@ -52,10 +52,10 @@ export default function HomePage() {
             <p />
             <FormGrid style={{gap: "25px"}}>
                 <DataRoundContainer style={{cursor: "pointer"}} onClick={handleHistory}>
-                    <div style={{fontSize: '15px', fontWeight: 600}}>Snack from History</div>
+                    <div style={{fontSize: '15px', fontWeight: 600}}>Snack<br />History</div>
                 </DataRoundContainer>
                 <DataRoundContainer style={{cursor: "pointer"}} onClick={handleReport}>
-                    <div style={{fontSize: '15px', fontWeight: 600}}>Search Snack</div>
+                    <div style={{fontSize: '15px', fontWeight: 600}}>Search/<br />Add<br />Snack</div>
                 </DataRoundContainer>
             </FormGrid>
             {Object.keys(stats).length && <BarChart
