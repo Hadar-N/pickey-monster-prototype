@@ -4,7 +4,7 @@ import { OpenCloseDescButton, DescriptionOutline, ImgsContainer, SpecificImg } f
 import { USER_ACTIONS } from "../utils/consts";
 
 export default function DescriptionBox() {
-    const [isOpen, setIsOpen] = useState({})
+    const [isOpen, setIsOpen] = useState(false)
     const [imgs,setImgs] = useState([])
     const userActions = useUserActions();
 
