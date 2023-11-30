@@ -5,7 +5,7 @@ import { USER_ACTIONS } from "../utils/consts";
 
 export default function DescriptionBox() {
     const [isOpen, setIsOpen] = useState({})
-    const [imgs,setImgs] = useState({})
+    const [imgs,setImgs] = useState([])
     const userActions = useUserActions();
 
     useEffect(() => {
