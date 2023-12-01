@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react"
 import { useUserActions } from "../utils/ConnectionContext";
 import { OpenCloseDescButton, DescriptionOutline, ImgsContainer, SpecificImg } from "../style/desc_box"
 import { USER_ACTIONS } from "../utils/consts";
+import styled from "styled-components";
 
 export default function DescriptionBox() {
     const [isOpen, setIsOpen] = useState(false)
@@ -9,7 +10,6 @@ export default function DescriptionBox() {
     const userActions = useUserActions();
 
     useEffect(() => {
-        console.log("DescriptionBox useEffect")
         const getMons = async() => {
             const res= await userActions(USER_ACTIONS.GET_ALL_STAGES_SAME_MONSTER)
             setImgs(res);
@@ -29,8 +29,10 @@ export default function DescriptionBox() {
 
     const DescriptionBoxContent = () => {
         return(
-            <DescriptionOutline onClick={handleOpenClose}>
+            <DescriptionOutline>
                 Clarifications:
+                <p />
+                instructions: <Link href="https://www.youtube.com/watch?v=TL2cDD80XwQ" target="_blank">YouTube</Link>
                 <p />
                 <ImgsContainer>
                     {imgs.map(item => ImgRender(item.mon_class, item.link))}
@@ -59,3 +61,14 @@ export default function DescriptionBox() {
     )
     
 }
+
+const Link = styled.a`
+:link,
+:visited,
+:hover,
+:active {
+  text-decoration: none; 
+  color: #000;
+}
+color: #000
+`
