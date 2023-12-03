@@ -37,16 +37,8 @@ export function useNutritionix() {
         getData();
     }, [])
 
-    const getHeadersBasedOnCount = useCallback((forceFifty) => {
+    const getHeadersBasedOnCount = useCallback(() => {
         let res = null;
-        if(forceFifty && headersData.count) {
-            if(headersData.count + countRef.current <= NUTRITIONIX_API_AMOUNT) countRef.current=NUTRITIONIX_API_AMOUNT-headersData.count;
-            else {
-                alert("issue with credentials, please retry logging in");
-                return null;
-            }
-        }
-
         if(!Object.keys(headersData).length) { return;
         } else if ((headersData.count + countRef.current) <= NUTRITIONIX_API_AMOUNT) {
             res= headersData.keys[0];
@@ -60,13 +52,12 @@ export function useNutritionix() {
         let response;
 
         let attempts = 2;
-        let forceFifty=false;
         while(attempts) {
             // console.log(forceFifty, countRef.current, getHeadersBasedOnCount(forceFifty)?.loc)
             try{
                 response = await axios({
                     method,
-                    headers: getHeadersBasedOnCount(forceFifty),
+                    headers: getHeadersBasedOnCount(),
                     url: `${NUTRITIONIX_BASE}${url}`,
                     data: body
                 });
@@ -76,7 +67,6 @@ export function useNutritionix() {
                 response = err;
                 if(err.message === ERR_MESSAGES.UNAUTHORIZED) {
                     attempts--;
-                    forceFifty = true;
                 } else  {
                     break;
                 }
