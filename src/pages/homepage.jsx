@@ -5,6 +5,8 @@ import { BarChart } from "@mui/x-charts";
 // import SnackCircle from '../assets/1000_F_227411817_EzyIQ0DJHUc9Fmy1p8U0M8nRXz3ED8jI-removebg-preview 1.png'
 import { ImageContainer, MonsterImage, DataRoundContainer } from "../style/general";
 import { FlexFormContainer, FormGrid } from "../style/form_elements";
+import { DESCBOX_TYPE } from "../utils/consts";
+import DescriptionBox from './descriptionbox';
 
 
 export default function HomePage() {
@@ -42,6 +44,8 @@ export default function HomePage() {
     }
 
     return (
+    <>
+        <DescriptionBox descType={DESCBOX_TYPE.SUGAR_INTAKE_CALC} isPositionRelative={true}/>
         <FlexFormContainer style={{alignItems:"center"}}>
             <ImageContainer>
                 {/* <MonsterImage src={SnackCircle} alt="" /> */}
@@ -77,6 +81,7 @@ export default function HomePage() {
                   width={300}           
             />}
         </FlexFormContainer>
+    </>
     )
     
 }

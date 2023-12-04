@@ -3,13 +3,13 @@ import { VIEW_WIDTH, VIEW_HEIGHT } from '../utils/consts';
 
 export const OpenCloseDescButton = styled.div`
     position: absolute;
-    top: 20px;
+    top: ${({$second}) => $second ? `60px` : `20px`};
     left: ${VIEW_WIDTH - 40}px;
 
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1;
+    z-index : ${({$second}) => $second ? '0' : '2'};
 
     cursor: pointer;
     border: 3px solid #333333;
@@ -42,6 +42,7 @@ export const DescriptionOutline = styled.div`
     font-weight: 500;
     font-size: 12px;
     text-align: center;
+    z-index:1;
 `
 
 export const ImgsContainer = styled.div`

@@ -45,3 +45,8 @@ export const MONSTER_TYPES = {
     GREEN : "green",
     BLUE : "blue",
 }
+
+export const DESCBOX_TYPE = {
+    GENERAL : "general",
+    SUGAR_INTAKE_CALC : "sugar_intake_calc"
+}
